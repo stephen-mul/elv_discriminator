@@ -8,9 +8,9 @@ import torch.nn.functional as F
 ### Convolutional Variational Autoencoder Class ###
 ###################################################
 
-class cVAE(nn.Module):
+class simple_cVAE(nn.Module):
     def __init__(self, imgChannels=1, featureDim = 32*20*20, zDim=256, ncond=16, nclass=10):
-        super(cVAE, self).__init__()
+        super(simple_cVAE, self).__init__()
 
         # Initilaising 2 convolutional layers and 2 fully-connected layers for encoder
         self.encConv1 = nn.Conv2d(imgChannels, 16, 5)

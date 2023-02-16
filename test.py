@@ -7,8 +7,8 @@ import numpy as np
 import random
 import argparse
 
-from conv_vae import VAE
-from cond_vae import cVAE
+from conv_vae import simple_VAE
+from cond_vae import simple_cVAE
 
 def main(args):
 
@@ -32,18 +32,18 @@ def main(args):
         )
 
     print('Loading Model')
-    if MODE == 'VAE':
-        net = VAE().to(device)
-        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/VAE/vae.pth'))
-    elif MODE == 'cVAE':
-        net = cVAE().to(device)
-        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/cVAE/cvae.pth'))
+    if MODE == 'simple_VAE':
+        net = simple_VAE().to(device)
+        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/simple_VAE/vae.pth'))
+    elif MODE == 'simple_cVAE':
+        net = simple_cVAE().to(device)
+        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/simple_cVAE/cvae.pth'))
     else:
-        print('Invalid network mode. Must be either VAE or cVAE')
+        print('Invalid network mode. Must be either simple_VAE or simple_cVAE')
     
 
     net.eval()
-    if MODE == 'VAE':
+    if MODE == 'simple_VAE':
         with torch.no_grad():
             test_count = 0
             for data in random.sample(list(test_loader), 10):
@@ -60,7 +60,7 @@ def main(args):
                 test_count += 1
                 if test_count == 10:
                     break
-    elif MODE == 'cVAE':
+    elif MODE == 'simple_cVAE':
         with torch.no_grad():
             test_count = 0
             for data in random.sample(list(test_loader), 10):

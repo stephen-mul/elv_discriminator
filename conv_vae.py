@@ -8,9 +8,9 @@ import torch.nn.functional as F
 ### Convolutional Variational Autoencoder Class ###
 ###################################################
 
-class VAE(nn.Module):
+class simple_VAE(nn.Module):
     def __init__(self, imgChannels=1, featureDim = 32*20*20, zDim=256):
-        super(VAE, self).__init__()
+        super(simple_VAE, self).__init__()
         self.featureDim = featureDim
 
         # Initilaising 2 convolutional layers and 2 fully-connected layers for encoder

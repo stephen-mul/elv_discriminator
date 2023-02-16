@@ -7,8 +7,8 @@ from torchvision import datasets, transforms
 import argparse
 from torch.utils.data import DataLoader
 
-from conv_vae import VAE
-from cond_vae import cVAE
+from conv_vae import simple_VAE
+from cond_vae import simple_cVAE
 from custom_dataloader.custom_elv import customDataset
 from losses import vae_loss
 
@@ -54,12 +54,12 @@ def main(args):
     ### Network and Optimiser ###
     #############################
 
-    if MODE == 'VAE':
-        net = VAE(featureDim=73728).to(device)
-    elif MODE == 'cVAE':
-        net = cVAE().to(device)
+    if MODE == 'simple_VAE':
+        net = simple_VAE(featureDim=73728).to(device)
+    elif MODE == 'simple_cVAE':
+        net = simple_cVAE().to(device)
     else:
-        print('Invalid network mode. Must be either VAE or cVAE')
+        print('Invalid network mode. Must be either simple_VAE or simple_cVAE')
     
     optimiser = torch.optim.Adam(net.parameters(), lr=1e-3)
 
@@ -67,7 +67,7 @@ def main(args):
     ### Training ###
     ################
 
-    if MODE == 'VAE':
+    if MODE == 'simple_VAE':
         for epoch in range(1):
             for idx, data in enumerate(train_loader, 0):
                 im0 = normalise(data['image_0'].to(device))
@@ -87,8 +87,8 @@ def main(args):
             print(f'Epoch {epoch}: Loss {loss}')
 
         print('Saving Model')
-        torch.save(net.state_dict(), '/home/stephen/notgan_workdir/vae/weights/VAE/vae.pth')
-    elif MODE == 'cVAE':
+        torch.save(net.state_dict(), '/home/stephen/notgan_workdir/vae/weights/simple_VAE/vae.pth')
+    elif MODE == 'simple_cVAE':
 
         for epoch in range(1):
             for idx, data in enumerate(train_loader, 0):
@@ -110,7 +110,7 @@ def main(args):
             print(f'Epoch {epoch}: Loss {loss}')
 
         print('Saving Model')
-        torch.save(net.state_dict(), '/home/stephen/notgan_workdir/vae/weights/cVAE/cvae.pth')
+        torch.save(net.state_dict(), '/home/stephen/notgan_workdir/vae/weights/simple_cVAE/cvae.pth')
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()

@@ -52,3 +52,17 @@ class Encoder(nn.Module):
         else:
             return self. calc_mean(torch.cat((x, y), dim = 1), self.calc_logVar(torch.cat(x, y), dim = 1))
 
+class Decoder(nn.Module):
+    def __init__(self, shape, nhid = 16, ncond = 0):
+        super(Decoder, self).__init__()
+        c, w, h = shape
+        self.shape = shape
+        self.decode = nn.Sequential(MLP([nhid+ncond, 64, 128, 256, c*w*h], last_activation = False), nn.Sigmoid())
+    def forward(self, z, y = None):
+        c, w, h = self.shape
+        if (y is None):
+            return self.decode(z).view(-1, c, w, h)
+        else:
+            return self.decode(torch.cat((z,y), dim = 1)).view(-1, c, w, h)
+
+
