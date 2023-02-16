@@ -28,3 +28,27 @@ class MLP(nn.Module):
         self.mlp = nn.Sequential(OrderedDict(q))
     def forward(self, x):
         return self.mlp(x)
+
+class Encoder(nn.Module):
+    def __init__(self, shape, nhid = 16, ncond = 0):
+        super(Encoder, self).__init__()
+        c, h, w = shape
+        ww = ((w-8)//2 - 4)//2
+        hh = ((h-8)//2 - 4)//2
+        self.encode = nn.Sequential(nn.Conv2d(c, 16, 5, padding = 0), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
+                                    nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
+                                    nn.MaxPool2d(2, 2),
+                                    nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                    nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                    nn.MaxPool2d(2, 2),
+                                    Flatten(), MLP([ww*hh*64, 256, 128])
+                                    )
+        self.calc_mean = MLP([128+ncond, 64, nhid], last_activation = False)
+        self.calc_logVar = MLP([128+ncond, 64, nhid], last_activation = False)
+    def forward(self, x, y = None):
+        x = self.encode(x)
+        if (y is None):
+            return self.calc_mean(x), self.calc_logVar(x)
+        else:
+            return self. calc_mean(torch.cat((x, y), dim = 1), self.calc_logVar(torch.cat(x, y), dim = 1))
+
