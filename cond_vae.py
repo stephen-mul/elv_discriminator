@@ -3,10 +3,13 @@
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from network_blocks import Encoder, Decoder
 
-###################################################
-### Convolutional Variational Autoencoder Class ###
-###################################################
+device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+
+##########################################################
+### Simple Convolutional Variational Autoencoder Class ###
+##########################################################
 
 class simple_cVAE(nn.Module):
     def __init__(self, imgChannels=1, featureDim = 32*20*20, zDim=256, ncond=16, nclass=10):
@@ -62,6 +65,35 @@ class simple_cVAE(nn.Module):
         z = self.reparameterise(mu, logVar)
         out = self.decoder(z,y)
         return out, mu, logVar
+
+
+###################################################
+### Convolutional Variational Autoencoder Class ###
+###################################################
+
+class VAE(nn.Module):
+    def __init__(self, shape, nhid = 16):
+        super(VAE, self).__init__()
+        self.dim = nhid
+        self.encoder = Encoder(shape, nhid)
+        self.decoder = Decoder(shape, nhid)
+
+    def sampling(self, mean, logvar):
+        eps = torch.randn(mean.shape).to(device)
+        sigma = 0.5 * torch.exp(logvar)
+        return mean + eps * sigma
+
+    def forward(self, x):
+        mean, logvar = self.encoder(x)
+        z = self.sampling(mean, logvar)
+        return self.decoder(z), mean, logvar
+
+    def generate(self, batch_size = None):
+        z = torch.randn((batch_size, self.dim)).to(device) if batch_size else torch.randn((1, self.dim)).to(device)
+        res = self.decoder(z)
+        if not batch_size:
+            res = res.squeeze(0)
+        return res
     
 
 

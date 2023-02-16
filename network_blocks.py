@@ -5,8 +5,6 @@ import numpy as np
 import torch.nn as nn
 from collections import OrderedDict
 
-device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-
 class Flatten(nn.Module):
     def __init__(self):
         super(Flatten, self).__init__()
