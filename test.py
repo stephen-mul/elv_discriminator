@@ -57,7 +57,7 @@ def main(args):
                 plt.imshow(np.squeeze(img))
                 out, _, _ = net(imgs)
                 outimg = np.transpose(out[0].cpu().numpy(), [1,2,0])
-                print(type(outimg))
+                print(np.squeeze(outimg).shape)
                 plt.subplot(122)
                 plt.imshow(np.squeeze(outimg))
                 plt.savefig(f'/home/stephen/notgan_workdir/vae/plots/test_plot_{test_count}.png')
