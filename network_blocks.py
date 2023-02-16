@@ -37,7 +37,7 @@ class Encoder(nn.Module):
                                     nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
                                     nn.MaxPool2d(2, 2),
                                     nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
-                                    nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                    nn.Conv2d(64, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
                                     nn.MaxPool2d(2, 2),
                                     Flatten(), MLP([ww*hh*64, 256, 128])
                                     )

@@ -7,9 +7,9 @@ from network_blocks import Encoder, Decoder
 
 device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
-########################################################
-### Simple Conditional Variational Autoencoder Class ###
-########################################################
+##########################################################
+### Simple Convolutional Variational Autoencoder Class ###
+##########################################################
 
 class simple_VAE(nn.Module):
     def __init__(self, imgChannels=1, featureDim = 32*20*20, zDim=256):
@@ -65,41 +65,33 @@ class simple_VAE(nn.Module):
         return out, mu, logVar
     
 
-#################################################
-### Conditional Variational Autoencoder Class ###
-#################################################
+###################################################
+### Convolutional Variational Autoencoder Class ###
+###################################################
 
-class cVAE(nn.Module):
-    def __init__(self, shape, nclass, nhid = 16, ncond =16):
-        super(cVAE, self).__init__()
+class VAE(nn.Module):
+    def __init__(self, shape, nhid = 16):
+        super(VAE, self).__init__()
         self.dim = nhid
-        self.encoder = Encoder(shape, nhid, ncond = ncond)
-        self.decoder = Decoder(shape, nhid, ncond = ncond)
-        self.label_embedding = nn.Embedding(nclass, ncond)
+        self.encoder = Encoder(shape, nhid)
+        self.decoder = Decoder(shape, nhid)
 
     def sampling(self, mean, logvar):
         eps = torch.randn(mean.shape).to(device)
         sigma = 0.5 * torch.exp(logvar)
         return mean + eps * sigma
 
-    def forward(self, x, y):
-        y = self.label_embedding(y)
-        mean, logvar = self.encoder(x, y)
+    def forward(self, x):
+        mean, logvar = self.encoder(x)
         z = self.sampling(mean, logvar)
-        return self.decoder(z, y), mean, logvar
+        return self.decoder(z), mean, logvar
 
-    def generate(self, class_idx):
-        if (type(class_idx) is int):
-            class_idx = torch.tensor(class_idx)
-        class_idx = class_idx.to(device)
-        if (len(class_idx.shape) == 0):
-            batch_size = None
-            class_idx = class_idx.unsqueeze(0)
-            z = torch.randn((1, self.dim)).to(device)
-        y = self.label_embeddings(class_idx)
-        res = self.decoder(z, y)
+    def generate(self, batch_size = None):
+        z = torch.randn((batch_size, self.dim)).to(device) if batch_size else torch.randn((1, self.dim)).to(device)
+        res = self.decoder(z)
         if not batch_size:
             res = res.squeeze(0)
         return res
+
 
 

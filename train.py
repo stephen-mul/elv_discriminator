@@ -11,14 +11,7 @@ from conv_vae import simple_VAE
 from cond_vae import simple_cVAE
 from custom_dataloader.custom_elv import customDataset
 from losses import vae_loss
-
-def normalise(im):
-    min_val = torch.min(im)
-    im -= min_val
-    max_val = torch.max(im)
-    im = im/max_val
-    return im
-
+from network_utils import normalise
 
 def main(args):
 
