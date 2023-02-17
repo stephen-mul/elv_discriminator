@@ -9,6 +9,8 @@ import argparse
 
 from conv_vae import simple_VAE, VAE
 from cond_vae import simple_cVAE
+from custom_dataloader.custom_elv import customDataset
+from network_utils import normalise
 
 def main(args):
 
@@ -32,6 +34,10 @@ def main(args):
         )
     elif DATASET == 'custom':
         ### test loader here
+        processed_path = './data/test'
+        test_loader = torch.utils.data.DataLoader(
+            customDataset(processed_path), batch_size = 1
+        )
         pass
 
     print('Loading Model')
@@ -42,7 +48,10 @@ def main(args):
         net = simple_cVAE().to(device)
         net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/simple_cVAE/cvae.pth'))
     elif MODE == "VAE":
-        net = VAE((1, 28, 28), nhid = 4).to(device)
+        if DATASET == "custom":
+            net = VAE((1, 32, 32), nhid=4, elv=True).to(device)
+        else:
+            net = VAE((1, 28, 28), nhid = 4).to(device)
         net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/new_model/VAE.pt')['net'])
     else:
         print('Invalid network mode. Must be either simple_VAE, simple_cVAE, or VAE')
@@ -53,8 +62,12 @@ def main(args):
         with torch.no_grad():
             test_count = 0
             for data in random.sample(list(test_loader), 10):
-                imgs, _ = data
-                imgs = imgs.to(device)
+                if DATASET == 'custom':
+                    imgs = normalise(data['image_0'].to(device))
+                    im1 = normalise(data['image_1']).to(device)
+                else:
+                    imgs, _ = data
+                    imgs = imgs.to(device)
                 img = np.transpose(imgs[0].cpu().numpy(), [1,2,0])
                 plt.subplot(121)
                 plt.imshow(np.squeeze(img))
