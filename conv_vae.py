@@ -70,11 +70,16 @@ class simple_VAE(nn.Module):
 ###################################################
 
 class VAE(nn.Module):
-    def __init__(self, shape, nhid = 16):
+    def __init__(self, shape, nhid = 16, elv=False):
         super(VAE, self).__init__()
         self.dim = nhid
         self.encoder = Encoder(shape, nhid)
-        self.decoder = Decoder(shape, nhid)
+        if elv:
+            # Double dimensions of target image
+            d_shape = (shape[0], 2*shape[1], 2*shape[2])
+            self.decoder = Decoder(d_shape, nhid)
+        else:
+            self.decoder = Decoder(shape, nhid)
 
     def sampling(self, mean, logvar):
         eps = torch.randn(mean.shape).to(device)
