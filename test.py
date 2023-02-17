@@ -34,10 +34,10 @@ def main(args):
     print('Loading Model')
     if MODE == 'simple_VAE':
         net = simple_VAE().to(device)
-        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/simple_VAE/vae.pth'))
+        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/simple_VAE/vae.pth'))
     elif MODE == 'simple_cVAE':
         net = simple_cVAE().to(device)
-        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/vae/weights/simple_cVAE/cvae.pth'))
+        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/simple_cVAE/cvae.pth'))
     elif MODE == "VAE":
         net = VAE((1, 28, 28), nhid = 4).to(device)
         net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/new_model/VAE.pt')['net'])
@@ -57,11 +57,9 @@ def main(args):
                 plt.imshow(np.squeeze(img))
                 out, _, _ = net(imgs)
                 outimg = np.transpose(out[0].cpu().numpy(), [1,2,0])
-                print(np.squeeze(outimg).shape)
                 plt.subplot(122)
                 plt.imshow(np.squeeze(outimg))
-                plt.savefig(f'/home/stephen/notgan_workdir/vae/plots/test_plot_{test_count}.png')
-                np.save(f'/home/stephen/notgan_workdir/vae/plots/test_plot_{test_count}.npy', np.squeeze(outimg))
+                plt.savefig(f'/home/stephen/notgan_workdir/elv_vae/plots/test_plot_{test_count}.png')
                 test_count += 1
                 if test_count == 10:
                     break
@@ -86,7 +84,7 @@ def main(args):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', required=True)
+    parser.add_argument('--mode', required=True, default='simple_VAE')
     parser.add_argument('--dataset', default='MNIST')
     args = parser.parse_args()
     main(args)
