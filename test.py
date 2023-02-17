@@ -30,6 +30,9 @@ def main(args):
             datasets.MNIST('data', train=False,
             transform=transforms.ToTensor()), batch_size=1
         )
+    elif DATASET == 'custom':
+        ### test loader here
+        pass
 
     print('Loading Model')
     if MODE == 'simple_VAE':

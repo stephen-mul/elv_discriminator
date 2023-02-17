@@ -6,7 +6,7 @@ import os, time, tqdm
 import argparse
 from conv_vae import VAE
 from losses import new_vae_loss
-from network_utils import EarlyStop, binary
+from network_utils import EarlyStop, binary, normalise
 from torch.utils.data import DataLoader
 from custom_dataloader.custom_elv import customDataset
 
@@ -25,11 +25,11 @@ def main(args):
         ])
 
         train_data = torchvision.datasets.MNIST(root='data', train=True, download=True, transform=mnist_transform)
-        train_iter = DataLoader(train_data, batch_size=512, shuffle=True)
+        train_iter = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=torch.get_num_threads())
     elif DATASET == 'custom':
         processed_path = './data/test'
-        train_iter = DataLoader(customDataset(processed_path), batch_size = 16,
-                                    shuffle = True, num_workers=4)
+        train_iter = DataLoader(customDataset(processed_path), batch_size = 32,
+                                    shuffle = True, num_workers=torch.get_num_threads())
 
     ##################
     ### Load Model ###
@@ -98,8 +98,8 @@ def main(args):
                 break
         elif DATASET == 'custom':
             for batch in tqdm.tqdm(train_iter, ncols = 50):
-                im0 = batch['image_0'].to(device)
-                im1 = batch['image_1'].to(device)
+                im0 = normalise(batch['image_0'].to(device))
+                im1 = normalise(batch['image_1'].to(device))
                 im1_hat, mean, logvar = net(im0)
 
                 l = new_vae_loss(im1, im1_hat, mean, logvar).to(device)
