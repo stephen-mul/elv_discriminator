@@ -29,6 +29,25 @@ class MLP(nn.Module):
 
 ### Writing a convolutional block to be used for both Encoder and Decoder
 
+### View class is necessary - from https://discuss.pytorch.org/t/how-to-build-a-view-layer-in-pytorch-for-sequential-models/53958/12
+
+class View(nn.Module):
+    def __init__(self, shape):
+        super().__init__()
+        self.shape = shape
+
+    def __repr__(self):
+        return f'View{self.shape}'
+
+    def forward(self, input):
+        '''
+        Reshapes the input according to the shape saved in the view data structure.
+        '''
+        batch_size = input.size(0)
+        shape = (batch_size, *self.shape)
+        out = input.view(shape)
+        return out
+
 class ConvBlock(nn.Module):
     def __init__(self, shape, nhid=16, ncond=0, encoder=True):
         super(ConvBlock, self).__init__()
@@ -46,7 +65,8 @@ class ConvBlock(nn.Module):
                                         )
         else:
             ## decoder block here
-            self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256, c*w*h]))
+            self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256])),
+
     def forward(self, x):
         return self.conv_block(x)
 
