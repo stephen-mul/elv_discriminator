@@ -27,6 +27,30 @@ class MLP(nn.Module):
     def forward(self, x):
         return self.mlp(x)
 
+### Writing a convolutional block to be used for both Encoder and Decoder
+
+class ConvBlock(nn.Module):
+    def __init__(self, shape, nhid=16, ncond=0, encoder=True):
+        super(ConvBlock, self).__init__()
+        c, h, w = shape
+        ww = ((w-8)//2 - 4)//2
+        hh = ((h-8)//2 - 4)//2
+        if encoder:
+            self.conv_block = nn.Sequential(nn.Conv2d(c, 16, 5, padding = 0), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
+                                        nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
+                                        nn.MaxPool2d(2, 2),
+                                        nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                        nn.Conv2d(64, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                        nn.MaxPool2d(2, 2),
+                                        Flatten(), MLP([ww*hh*64, 256, 128])
+                                        )
+        else:
+            ## decoder block here
+            self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256, c*w*h]))
+    def forward(self, x):
+        return self.conv_block(x)
+
+
 class Encoder(nn.Module):
     def __init__(self, shape, nhid = 16, ncond = 0):
         super(Encoder, self).__init__()
