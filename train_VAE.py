@@ -40,7 +40,7 @@ def main(args):
     if DATASET == 'MNIST':
         net = VAE((1, 28, 28), nhid = 4)
     elif DATASET == 'custom':
-        net = VAE((1, 32, 32), nhid = 4, elv=True)
+        net = VAE((1, 32, 32), nhid = 256, elv=True)
     net.to(device)
     save_name = './weights/new_model/VAE.pt'
 
@@ -69,7 +69,7 @@ def main(args):
                 g['lr'] = lr
 
     
-    early_stop = EarlyStop(patience = 20, save_name = save_name)
+    early_stop = EarlyStop(patience = 500, save_name = save_name)
     net = net.to(device)
     
     max_epochs = args.n_epochs
