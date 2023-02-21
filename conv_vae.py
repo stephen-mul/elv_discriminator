@@ -69,6 +69,8 @@ class simple_VAE(nn.Module):
 ### Convolutional Variational Autoencoder Class ###
 ###################################################
 
+### Based on https://github.com/chendaichao/VAE-pytorch
+
 class VAE(nn.Module):
     def __init__(self, shape, nhid = 16, elv=False):
         super(VAE, self).__init__()

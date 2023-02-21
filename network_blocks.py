@@ -66,7 +66,7 @@ class ConvBlock(nn.Module):
         else:
             ## decoder block here
             self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256]),
-                                        View())
+                                        View((1, 64, 8, 8)))
 
     def forward(self, x):
         return self.conv_block(x)
@@ -78,14 +78,20 @@ class Encoder(nn.Module):
         c, h, w = shape
         ww = ((w-8)//2 - 4)//2
         hh = ((h-8)//2 - 4)//2
-        self.encode = nn.Sequential(nn.Conv2d(c, 16, 5, padding = 0), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
-                                    nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
-                                    nn.MaxPool2d(2, 2),
-                                    nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
-                                    nn.Conv2d(64, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
-                                    nn.MaxPool2d(2, 2),
-                                    Flatten(), MLP([ww*hh*64, 256, 128])
-                                    )
+        test_block = 'on'
+        if test_block =='on':
+            print('Test block on')
+            self.encode = ConvBlock(shape, nhid, ncond, encoder=True)
+        else:
+            print('Test block off')
+            self.encode = nn.Sequential(nn.Conv2d(c, 16, 5, padding = 0), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
+                                        nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
+                                        nn.MaxPool2d(2, 2),
+                                        nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                        nn.Conv2d(64, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
+                                        nn.MaxPool2d(2, 2),
+                                        Flatten(), MLP([ww*hh*64, 256, 128])
+                                        )
         self.calc_mean = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
         self.calc_logVar = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
     def forward(self, x, y = None):
@@ -100,7 +106,13 @@ class Decoder(nn.Module):
         super(Decoder, self).__init__()
         c, w, h = shape
         self.shape = shape
-        self.decode = nn.Sequential(MLP([nhid+ncond, nhid+64, nhid+128, nhid+256, c*w*h], last_activation = False), nn.Sigmoid())
+        test_block = 'on'
+        if test_block == 'on':
+            print('Decoder test block on')
+            self.decode = ConvBlock(shape, nhid, ncond, encoder=False)
+        else:
+            print('Decoder test block off')
+            self.decode = nn.Sequential(MLP([nhid+ncond, nhid+64, nhid+128, nhid+256, c*w*h], last_activation = False), nn.Sigmoid())
     def forward(self, z, y = None):
         c, w, h = self.shape
         if (y is None):

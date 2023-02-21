@@ -71,6 +71,8 @@ class simple_cVAE(nn.Module):
 ### Conditional Variational Autoencoder Class ###
 #################################################
 
+### Based on https://github.com/chendaichao/VAE-pytorch
+
 class cVAE(nn.Module):
     def __init__(self, shape, nclass, nhid = 16, ncond =16):
         super(cVAE, self).__init__()

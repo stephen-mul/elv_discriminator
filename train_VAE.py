@@ -10,9 +10,11 @@ from network_utils import EarlyStop, binary, normalise
 from torch.utils.data import DataLoader
 from custom_dataloader.custom_elv import customDataset
 from custom_dataloader.augmentations import RotateTransform
+from torchsummary import summary
 
 def main(args):
     DATASET = args.dataset
+    summary_mode = args.summary
 
     #################
     ### Load Data ###
@@ -42,6 +44,11 @@ def main(args):
     elif DATASET == 'custom':
         net = VAE((1, 32, 32), nhid = 256, elv=True)
     net.to(device)
+
+    if summary_mode:
+        summary(net, (1, 32, 32))
+        exit()
+
     save_name = './weights/new_model/VAE.pt'
 
 
@@ -132,5 +139,6 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='MNIST')
     parser.add_argument('--n_epochs', type = int, default = 100)
+    parser.add_argument('--summary', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
     main(args)
