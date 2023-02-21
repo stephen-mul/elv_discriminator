@@ -9,6 +9,7 @@ from losses import new_vae_loss
 from network_utils import EarlyStop, binary, normalise
 from torch.utils.data import DataLoader
 from custom_dataloader.custom_elv import customDataset
+from custom_dataloader.augmentations import RotateTransform
 
 def main(args):
     DATASET = args.dataset
@@ -28,7 +29,7 @@ def main(args):
         train_iter = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=torch.get_num_threads())
     elif DATASET == 'custom':
         processed_path = './data/test'
-        train_iter = DataLoader(customDataset(processed_path), batch_size = 32,
+        train_iter = DataLoader(customDataset(processed_path, transform=RotateTransform([0, 90, 180, 270])), batch_size = 32,
                                     shuffle = True, num_workers=torch.get_num_threads())
 
     ##################
@@ -67,10 +68,11 @@ def main(args):
             for g in optimiser.param_groups:
                 g['lr'] = lr
 
-    max_epochs = 100
+    
     early_stop = EarlyStop(patience = 20, save_name = save_name)
     net = net.to(device)
-
+    
+    max_epochs = args.n_epochs
     print('Training on ', device)
     for epoch in range(max_epochs):
         train_loss, n , start = 0.0, 0, time.time()
@@ -129,5 +131,6 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='MNIST')
+    parser.add_argument('--n_epochs', type = int, default = 100)
     args = parser.parse_args()
     main(args)
