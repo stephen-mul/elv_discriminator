@@ -66,7 +66,10 @@ class ConvBlock(nn.Module):
         else:
             ## decoder block here
             self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256]),
-                                        View((1, 64, 8, 8)))
+                                        nn.Unflatten(1, (4, 8, 8)),
+                                        nn.Conv2d(4,16*4, 3, 1, 1), nn.BatchNorm2d(16*4), nn.ReLU(inplace=True), nn.PixelShuffle(4),
+                                        nn.MaxPool2d(3, 1, 1, 1)
+                                        )
 
     def forward(self, x):
         return self.conv_block(x)

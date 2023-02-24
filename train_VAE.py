@@ -79,7 +79,7 @@ def main(args):
     early_stop = EarlyStop(patience = 500, save_name = save_name)
     net = net.to(device)
     
-    max_epochs = args.n_epochs
+    max_epochs = args.nepochs
     print('Training on ', device)
     for epoch in range(max_epochs):
         train_loss, n , start = 0.0, 0, time.time()
@@ -138,7 +138,7 @@ def main(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument('--dataset', default='MNIST')
-    parser.add_argument('--n_epochs', type = int, default = 100)
+    parser.add_argument('--nepochs', type = int, default = 100)
     parser.add_argument('--summary', action=argparse.BooleanOptionalAction, default=False)
     args = parser.parse_args()
     main(args)
