@@ -61,15 +61,51 @@ class ConvBlock(nn.Module):
                                         nn.Conv2d(32, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
                                         nn.Conv2d(64, 64, 3, padding = 0), nn.BatchNorm2d(64), nn.ReLU(inplace = True),
                                         nn.MaxPool2d(2, 2),
-                                        Flatten(), MLP([ww*hh*64, 256, 128])
+                                        Flatten(), MLP([ww*hh*64, 256])
                                         )
         else:
             ## decoder block here
-            self.conv_block = nn.Sequential(MLP([nhid+ncond, 64, 128, 256]),
-                                        nn.Unflatten(1, (4, 8, 8)),
-                                        nn.Conv2d(4,16*4, 3, 1, 1), nn.BatchNorm2d(16*4), nn.ReLU(inplace=True), nn.PixelShuffle(4),
-                                        nn.MaxPool2d(3, 1, 1, 1)
+            ## block that runs
+            self._conv_block = nn.Sequential(MLP([nhid+ncond, 1024]),
+                                        nn.Unflatten(1, (64, 4, 4)),
+                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True), 
+                                        nn.MaxPool2d(5, 1, 0, 1),
+                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                        nn.MaxPool2d(5, 1, 0, 1), 
+                                        nn.Sigmoid()
                                         )
+            ## test block in case i break everything again
+            self.__conv_block = nn.Sequential(MLP([nhid+ncond, 1024]),
+                                        nn.Unflatten(1, (64, 4, 4)),
+                                        nn.BatchNorm2d(64),
+                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True), 
+                                        nn.MaxPool2d(5, 1, 0, 1),
+                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                        nn.MaxPool2d(5, 1, 0, 1), 
+                                        nn.Sigmoid()
+                                        )
+
+            ### Block that actually outputs something
+            self.conv_block = nn.Sequential(MLP([nhid+ncond, 4096]),
+                                        nn.Unflatten(1, (64, 8, 8)),
+                                        nn.BatchNorm2d(64),
+                                        nn.Conv2d(64,64*64, 3, 1, 1), nn.BatchNorm2d(64*64), nn.ReLU(inplace=True), nn.PixelShuffle(8),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1), nn.ReLU(inplace=True),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.Sigmoid()
+                                        )
+
 
     def forward(self, x):
         return self.conv_block(x)
@@ -95,8 +131,10 @@ class Encoder(nn.Module):
                                         nn.MaxPool2d(2, 2),
                                         Flatten(), MLP([ww*hh*64, 256, 128])
                                         )
-        self.calc_mean = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
-        self.calc_logVar = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
+        #self.calc_mean = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
+        #self.calc_logVar = MLP([128+ncond, 64+nhid, nhid], last_activation = False)
+        self.calc_mean = MLP([256+ncond, nhid], last_activation=False)
+        self.calc_logVar = MLP([256+ncond, nhid],last_activation=False)
     def forward(self, x, y = None):
         x = self.encode(x)
         if (y is None):

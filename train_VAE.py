@@ -76,7 +76,7 @@ def main(args):
                 g['lr'] = lr
 
     
-    early_stop = EarlyStop(patience = 500, save_name = save_name)
+    early_stop = EarlyStop(patience = 50, save_name = save_name)
     net = net.to(device)
     
     max_epochs = args.nepochs
@@ -109,7 +109,10 @@ def main(args):
             for batch in tqdm.tqdm(train_iter, ncols = 50):
                 im0 = normalise(batch['image_0'].to(device))
                 im1 = normalise(batch['image_1'].to(device))
+                print('Input shape: ', im0.shape)
+                print('Target shape:', im1.shape)
                 im1_hat, mean, logvar = net(im0)
+                print('Out shape: ', im1_hat.shape)
 
                 l = new_vae_loss(im1, im1_hat, mean, logvar).to(device)
                 optimiser.zero_grad()

@@ -89,8 +89,12 @@ class VAE(nn.Module):
         return mean + eps * sigma
 
     def forward(self, x):
+        #print('Before encoder: ', x.shape)
         mean, logvar = self.encoder(x)
         z = self.sampling(mean, logvar)
+        #print('Before decoder: ', z.shape)
+        out = self.decoder(z)
+        #print('After decoder: ', out.shape)
         return self.decoder(z), mean, logvar
 
     def generate(self, batch_size = None):
