@@ -94,7 +94,7 @@ class ConvBlock(nn.Module):
                                         )
 
             ### Block that actually outputs something
-            self.conv_block = nn.Sequential(MLP([nhid+ncond, 4096]),
+            self.___conv_block = nn.Sequential(MLP([nhid+ncond, 4096]),
                                         nn.Unflatten(1, (64, 8, 8)),
                                         nn.BatchNorm2d(64),
                                         nn.Conv2d(64,64*64, 3, 1, 1), nn.BatchNorm2d(64*64), nn.ReLU(inplace=True), nn.PixelShuffle(8),
@@ -104,6 +104,10 @@ class ConvBlock(nn.Module):
                                         nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1), nn.ReLU(inplace=True),
                                         nn.MaxPool2d(3, 1, 1, 1),
                                         nn.Sigmoid()
+                                        )
+            ### Mlp only block
+            self.conv_block = nn.Sequential(MLP([nhid+ncond, 2048, 4096]),
+                                            nn.Sigmoid()
                                         )
 
 
@@ -119,10 +123,10 @@ class Encoder(nn.Module):
         hh = ((h-8)//2 - 4)//2
         test_block = 'on'
         if test_block =='on':
-            print('Test block on')
+            print('Encoder test block on')
             self.encode = ConvBlock(shape, nhid, ncond, encoder=True)
         else:
-            print('Test block off')
+            print('Encoder test block off')
             self.encode = nn.Sequential(nn.Conv2d(c, 16, 5, padding = 0), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
                                         nn.Conv2d(16, 32, 5, padding = 0), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
                                         nn.MaxPool2d(2, 2),
@@ -157,8 +161,7 @@ class Decoder(nn.Module):
     def forward(self, z, y = None):
         c, w, h = self.shape
         if (y is None):
-            #return self.decode(z).view(-1, c, w, h)
-            return self.decode(z)
+            return self.decode(z).view(-1, c, w, h)
         else:
             return self.decode(torch.cat((z,y), dim = 1)).view(-1, c, w, h)
 

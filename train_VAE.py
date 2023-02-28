@@ -15,6 +15,7 @@ from torchsummary import summary
 def main(args):
     DATASET = args.dataset
     summary_mode = args.summary
+    scheduler_type = args.lr_scheduler
 
     #################
     ### Load Data ###
@@ -56,12 +57,22 @@ def main(args):
     ### Training ###
     ################
 
-    lr = 1e-3
+    lr = 1e-2
     optimiser = torch.optim.Adam(filter(lambda p: p.requires_grad, net.parameters()), lr=lr, weight_decay = 0.0001)
 
     def adjust_lr(optimiser, decay_rate = 0.95):
         for param_group in optimiser.param_groups:
             param_group['lr'] *= decay_rate
+
+    #################
+    ### Cyclic LR ###
+    #################
+    scheduler = torch.optim.lr_scheduler.CyclicLR(optimiser, base_lr = 1e-3, max_lr = 1e-1, cycle_momentum=False, 
+                                                    step_size_up=200, step_size_down=200)
+
+    def get_lr(optimizer):
+        for param_group in optimizer.param_groups:
+            return param_group['lr']
     
     retrain = True
     if os.path.exists(save_name):
@@ -97,11 +108,18 @@ def main(args):
                 n += X.shape[0]
             
             train_loss /= n
+            lr = get_lr(optimiser)
 
-            print('epoch %d, train loss %.4f , time %.1f sec'
-            % (epoch, train_loss, time.time() - start))
+            #print('epoch %d, train loss %.4f , time %.1f sec'
+            #% (epoch, train_loss, time.time() - start))
+            print(f'epoch {epoch}, train loss {round(train_loss, 4)}, time {round(time.time() -start, 1)} sec, lr {lr}')
         
-            adjust_lr(optimiser)
+            if scheduler == 'simple_decay':
+                adjust_lr(optimiser)
+            elif scheduler == 'cyclic':
+                scheduler.step()
+            else:
+                print('Select a valid lr scheduler - simple_decay or cyclic')
             
             if (early_stop(train_loss, net, optimiser)):
                 break
@@ -109,10 +127,10 @@ def main(args):
             for batch in tqdm.tqdm(train_iter, ncols = 50):
                 im0 = normalise(batch['image_0'].to(device))
                 im1 = normalise(batch['image_1'].to(device))
-                print('Input shape: ', im0.shape)
-                print('Target shape:', im1.shape)
+                #print('Input shape: ', im0.shape)
+                #print('Target shape:', im1.shape)
                 im1_hat, mean, logvar = net(im0)
-                print('Out shape: ', im1_hat.shape)
+                #print('Out shape: ', im1_hat.shape)
 
                 l = new_vae_loss(im1, im1_hat, mean, logvar).to(device)
                 optimiser.zero_grad()
@@ -123,11 +141,19 @@ def main(args):
                 n += im0.shape[0]
             
             train_loss /= n
+            lr = get_lr(optimiser)
 
-            print('epoch %d, train loss %.4f , time %.1f sec'
-            % (epoch, train_loss, time.time() - start))
+            #print('epoch %d, train loss %.4f , time %.1f sec'
+            #% (epoch, train_loss, time.time() - start))
+            print(f'epoch {epoch}, train loss {round(train_loss, 4)}, time {round(time.time() -start, 1)} sec, lr {round(lr, 4)}')
         
-            adjust_lr(optimiser)
+            if scheduler_type == 'simple_decay':
+                adjust_lr(optimiser)
+            elif scheduler_type == 'cyclic':
+                scheduler.step()
+            else:
+                print('Select a valid lr scheduler - simple_decay or cyclic')
+                exit()
             
             if (early_stop(train_loss, net, optimiser)):
                 break
@@ -143,5 +169,6 @@ if __name__ == "__main__":
     parser.add_argument('--dataset', default='MNIST')
     parser.add_argument('--nepochs', type = int, default = 100)
     parser.add_argument('--summary', action=argparse.BooleanOptionalAction, default=False)
+    parser.add_argument('--lr_scheduler', type = str, default='simple_decay')
     args = parser.parse_args()
     main(args)
