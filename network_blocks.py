@@ -157,7 +157,8 @@ class Decoder(nn.Module):
     def forward(self, z, y = None):
         c, w, h = self.shape
         if (y is None):
-            return self.decode(z).view(-1, c, w, h)
+            #return self.decode(z).view(-1, c, w, h)
+            return self.decode(z)
         else:
             return self.decode(torch.cat((z,y), dim = 1)).view(-1, c, w, h)
 
