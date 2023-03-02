@@ -19,8 +19,12 @@ def vae_loss(out, imgs, mu, logVar):
 
 ### loss for updated VAEs
 
+
+MSE_LOSS = nn.MSELoss(reduction="mean")
 BCE_loss = nn.BCELoss(reduction = "sum")
 def new_vae_loss(X, X_hat, mean, logvar):
+    mse = MSE_LOSS(X_hat, X)
     reconstruction_loss = BCE_loss(X_hat, X)
     KL_div = 0.5 * torch.sum(-1 - logvar + torch.exp(logvar) + mean**2)
     return reconstruction_loss + KL_div
+    #return reconstruction_loss

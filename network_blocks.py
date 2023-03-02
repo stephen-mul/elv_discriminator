@@ -134,13 +134,14 @@ class ConvBlock(nn.Module):
                                         nn.Sigmoid()
                                         )
             ### Resize convolution block https://distill.pub/2016/deconv-checkerboard/
-            self.conv_block = nn.Sequential(MLP([nhid+ncond,  4096]),
-                                        nn.Unflatten(1, (64, 8, 8)),
-                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+            self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                        nn.Unflatten(1, (32, 4, 4)),
+                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
                                         nn.MaxPool2d(3, 1, 1, 1),
-                                        Interpolate((64, 64), mode='nearest'),
+                                        Interpolate((32, 32), mode='nearest'),
                                         nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
                                         nn.MaxPool2d(3, 1, 1, 1),
+                                        Interpolate((64, 64), mode='nearest'),
                                         nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
                                         nn.Sigmoid()
                                         )
