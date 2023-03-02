@@ -94,7 +94,7 @@ class ConvBlock(nn.Module):
                                         )
 
             ### Block that actually outputs something
-            self.___conv_block = nn.Sequential(MLP([nhid+ncond, 4096]),
+            self.conv_block = nn.Sequential(MLP([nhid+ncond,256,  4096]),
                                         nn.Unflatten(1, (64, 8, 8)),
                                         nn.BatchNorm2d(64),
                                         nn.Conv2d(64,64*64, 3, 1, 1), nn.BatchNorm2d(64*64), nn.ReLU(inplace=True), nn.PixelShuffle(8),
@@ -106,7 +106,7 @@ class ConvBlock(nn.Module):
                                         nn.Sigmoid()
                                         )
             ### Mlp only block
-            self.conv_block = nn.Sequential(MLP([nhid+ncond, 2048, 4096]),
+            self.___conv_block = nn.Sequential(MLP([nhid+ncond, 2048, 4096]),
                                             nn.Sigmoid()
                                         )
 

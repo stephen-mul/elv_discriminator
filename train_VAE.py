@@ -68,7 +68,7 @@ def main(args):
     ### Cyclic LR ###
     #################
     scheduler = torch.optim.lr_scheduler.CyclicLR(optimiser, base_lr = 1e-3, max_lr = 1e-1, cycle_momentum=False, 
-                                                    step_size_up=200, step_size_down=200)
+                                                    step_size_up=20, step_size_down=20)
 
     def get_lr(optimizer):
         for param_group in optimizer.param_groups:
