@@ -59,6 +59,31 @@ class View(nn.Module):
         shape = (batch_size, *self.shape)
         out = input.view(shape)
         return out
+    
+class ResidualBlock(nn.Module):
+    def __init__(self, in_channels, out_channels, stride = 1, padding = 0, kernel = 4, encoder = True, pool = False, max_kernel=2, max_stride=2):
+        super(ResidualBlock, self).__init__()
+        self.pool = pool
+        self.max_pool = nn.MaxPool2d(max_kernel, max_stride)
+        if encoder:
+            self._conv_block = nn.Sequential(
+                                nn.Conv2d(in_channels, out_channels, kernel, stride, padding),
+                                nn.BatchNorm2d(out_channels),
+                                nn.ReLU(),
+            )
+            self.conv_block = nn.Sequential(
+                                nn.Conv2d(in_channels, out_channels, kernel, stride, padding),
+                                nn.ReLU(),
+            )
+
+    def forward(self, x):
+        residual = x
+        conv_out = self.conv_block(x)
+        out = residual + conv_out
+        if self.pool:
+            out = self.max_pool(x)
+        return out
+    
 
 class ConvBlock(nn.Module):
     def __init__(self, shape, nhid=16, ncond=0, encoder=True):
@@ -75,10 +100,22 @@ class ConvBlock(nn.Module):
                                         nn.MaxPool2d(2, 2),
                                         Flatten(), MLP([ww*hh*64, 256])
                                         )
-            self.conv_block = nn.Sequential(nn.Conv2d(c, 16, 3, padding = 1, stride = 2), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
+            self._conv_block = nn.Sequential(nn.Conv2d(c, 16, 3, padding = 1, stride = 2), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
                                         nn.Conv2d(16, 32, 3, padding = 1, stride = 2), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
                                         nn.MaxPool2d(2, 2),
                                         Flatten(), MLP([ww*hh*32, 256])
+                                        )
+            
+            self.conv_block = nn.Sequential(nn.Conv2d(c, 16, 3, padding = 1, stride = 2), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
+                                        nn.Conv2d(16, 32, 3, padding = 1, stride = 2), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
+                                        ResidualBlock(32, 32 , kernel=3, stride = 1, padding=1),
+                                        nn.MaxPool2d(2, 2),
+                                        Flatten(), MLP([ww*hh*32, 256])
+                                        )
+
+            self._conv_block = nn.Sequential(ResidualBlock(c, 16, kernel=3, stride = 2, padding = 1),
+                                            ResidualBlock(16, 32, kernel=3, padding=1, stride=2, pool=True),
+                                            Flatten(), MLP([ww*hh*32, 256])
                                         )
         else:
             ## decoder block here
@@ -107,7 +144,7 @@ class ConvBlock(nn.Module):
                                         nn.Sigmoid()
                                         )
             ### Resize convolution block https://distill.pub/2016/deconv-checkerboard/
-            self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+            self.___conv_block = nn.Sequential(MLP([nhid+ncond]),
                                         nn.Unflatten(1, (32, 4, 4)),
                                         nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
                                         nn.MaxPool2d(3, 1, 1, 1),
@@ -116,6 +153,33 @@ class ConvBlock(nn.Module):
                                         nn.MaxPool2d(3, 1, 1, 1),
                                         Interpolate((64, 64), mode='nearest'),
                                         nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
+                                        nn.Sigmoid()
+                                        )
+            #Residual version of decoder
+            self._____conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                        nn.Unflatten(1, (32, 4, 4)),
+                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        Interpolate((32, 32), mode='nearest'),
+                                        nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                        ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        Interpolate((64, 64), mode='nearest'),
+                                        ResidualBlock(32, 32, kernel=3, stride=1, padding = 1),
+                                        nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
+                                        nn.Sigmoid()
+                                        )
+            self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                        nn.Unflatten(1, (32, 4, 4)),
+                                        nn.Conv2d(32, 64, 3, 1, 1), nn.ReLU(inplace=True),
+                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        Interpolate((36, 36), mode='bilinear'),
+                                        nn.Conv2d(64, 32, 5, 1, 0), nn.ReLU(inplace=True),
+                                        ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                        Interpolate((68, 68), mode='bilinear'),
+                                        nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
                                         nn.Sigmoid()
                                         )
 
