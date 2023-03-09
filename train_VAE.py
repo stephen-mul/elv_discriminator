@@ -31,7 +31,8 @@ def main(args):
         train_data = torchvision.datasets.MNIST(root='data', train=True, download=True, transform=mnist_transform)
         train_iter = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=torch.get_num_threads())
     elif DATASET == 'custom':
-        processed_path = './data/test'
+        #processed_path = './data/test'
+        processed_path = './data/random_tile_0'
         train_iter = DataLoader(customDataset(processed_path, transform=RotateTransform([0, 90, 180, 270])), batch_size = 32,
                                     shuffle = True, num_workers=torch.get_num_threads())
 

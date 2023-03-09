@@ -34,7 +34,8 @@ def main(args):
         )
     elif DATASET == 'custom':
         ### test loader here
-        processed_path = './data/test'
+        #processed_path = './data/test'
+        processed_path = './data/random_tile_0'
         test_loader = torch.utils.data.DataLoader(
             customDataset(processed_path), batch_size = 1
         )
