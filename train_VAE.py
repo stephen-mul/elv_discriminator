@@ -44,7 +44,7 @@ def main(args):
     if DATASET == 'MNIST':
         net = VAE((1, 28, 28), nhid = 4)
     elif DATASET == 'custom':
-        net = VAE((1, 32, 32), nhid = 512, elv=True)
+        net = VAE((1, 32, 32), nhid = 2048, elv=True)
     net.to(device)
 
     if summary_mode:

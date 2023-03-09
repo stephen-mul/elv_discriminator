@@ -66,12 +66,12 @@ class ResidualBlock(nn.Module):
         self.pool = pool
         self.max_pool = nn.MaxPool2d(max_kernel, max_stride)
         if encoder:
-            self._conv_block = nn.Sequential(
+            self.conv_block = nn.Sequential(
                                 nn.Conv2d(in_channels, out_channels, kernel, stride, padding),
                                 nn.BatchNorm2d(out_channels),
                                 nn.ReLU(),
             )
-            self.conv_block = nn.Sequential(
+            self._conv_block = nn.Sequential(
                                 nn.Conv2d(in_channels, out_channels, kernel, stride, padding),
                                 nn.ReLU(),
             )
@@ -171,12 +171,15 @@ class ConvBlock(nn.Module):
                                         nn.Sigmoid()
                                         )
             self.conv_block = nn.Sequential(MLP([nhid+ncond]),
-                                        nn.Unflatten(1, (32, 4, 4)),
-                                        nn.Conv2d(32, 64, 3, 1, 1), nn.ReLU(inplace=True),
+                                        nn.Unflatten(1, (32, 8, 8)),
+                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
                                         ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
-                                        nn.MaxPool2d(3, 1, 1, 1),
+                                        nn.MaxPool2d(2, 2),
+                                        Interpolate((20, 20), mode='bilinear'),
+                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                        nn.MaxPool2d(2, 2),
                                         Interpolate((36, 36), mode='bilinear'),
-                                        nn.Conv2d(64, 32, 5, 1, 0), nn.ReLU(inplace=True),
+                                        nn.Conv2d(64, 32, 5, 1, 0), nn.BatchNorm2d(32),nn.ReLU(inplace=True),
                                         ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
                                         Interpolate((68, 68), mode='bilinear'),
                                         nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
