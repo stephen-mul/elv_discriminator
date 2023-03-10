@@ -86,7 +86,7 @@ class ResidualBlock(nn.Module):
     
 
 class ConvBlock(nn.Module):
-    def __init__(self, shape, nhid=16, ncond=0, encoder=True):
+    def __init__(self, shape, nhid=16, ncond=0, encoder=True, elv = False):
         super(ConvBlock, self).__init__()
         c, h, w = shape
         ww = ((w-8)//2 - 4)//2
@@ -119,72 +119,79 @@ class ConvBlock(nn.Module):
                                         )
         else:
             ## decoder block here
-            ## block that runs
-            self._conv_block = nn.Sequential(MLP([nhid+ncond, 1024]),
-                                        nn.Unflatten(1, (64, 4, 4)),
-                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True), 
-                                        nn.MaxPool2d(5, 1, 0, 1),
-                                        nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
-                                        nn.MaxPool2d(5, 1, 0, 1), 
-                                        nn.Sigmoid()
-                                        )
-            
-            ### Small block
-            self.__conv_block = nn.Sequential(MLP([nhid+ncond,  4096]),
-                                        nn.Unflatten(1, (64, 8, 8)),
-                                        nn.Conv2d(64,64*64, 3, 1, 1), nn.BatchNorm2d(64*64), nn.ReLU(inplace=True), nn.PixelShuffle(8),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
-                                        nn.Sigmoid()
-                                        )
-            ### Resize convolution block https://distill.pub/2016/deconv-checkerboard/
-            self.___conv_block = nn.Sequential(MLP([nhid+ncond]),
-                                        nn.Unflatten(1, (32, 4, 4)),
-                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        Interpolate((32, 32), mode='nearest'),
-                                        nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        Interpolate((64, 64), mode='nearest'),
-                                        nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
-                                        nn.Sigmoid()
-                                        )
-            #Residual version of decoder
-            self._____conv_block = nn.Sequential(MLP([nhid+ncond]),
-                                        nn.Unflatten(1, (32, 4, 4)),
-                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
-                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        Interpolate((32, 32), mode='nearest'),
-                                        nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
-                                        ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
-                                        nn.MaxPool2d(3, 1, 1, 1),
-                                        Interpolate((64, 64), mode='nearest'),
-                                        ResidualBlock(32, 32, kernel=3, stride=1, padding = 1),
-                                        nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
-                                        nn.Sigmoid()
-                                        )
-            self.conv_block = nn.Sequential(MLP([nhid+ncond]),
-                                        nn.Unflatten(1, (32, 8, 8)),
-                                        nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
-                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
-                                        nn.MaxPool2d(2, 2),
-                                        Interpolate((20, 20), mode='bilinear'),
-                                        ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
-                                        nn.MaxPool2d(2, 2),
-                                        Interpolate((36, 36), mode='bilinear'),
-                                        nn.Conv2d(64, 32, 5, 1, 0), nn.BatchNorm2d(32),nn.ReLU(inplace=True),
-                                        ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
-                                        Interpolate((68, 68), mode='bilinear'),
-                                        nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
-                                        nn.Sigmoid()
-                                        )
+            if elv == False:
+                ### Mnist block
+                self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                                nn.Unflatten(1, (32, 8, 8)),
+                                                nn.Conv2d(32, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                                ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                                nn.MaxPool2d(2, 2),
+                                                Interpolate((20, 20), mode='bilinear'),
+                                                ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                                nn.MaxPool2d(2, 2),
+                                                Interpolate((32, 32), mode='bilinear'),
+                                                nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
+                                                nn.Sigmoid()
+                                                )
+            else:
+                ## block that runs
+                self._conv_block = nn.Sequential(MLP([nhid+ncond, 1024]),
+                                            nn.Unflatten(1, (64, 4, 4)),
+                                            nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            nn.Conv2d(64,64*4, 3, 1, 1), nn.BatchNorm2d(64*4), nn.ReLU(inplace=True), nn.PixelShuffle(2),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True), 
+                                            nn.MaxPool2d(5, 1, 0, 1),
+                                            nn.Conv2d(64, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                            nn.MaxPool2d(5, 1, 0, 1), 
+                                            nn.Sigmoid()
+                                            )
+
+
+                ### Resize convolution block https://distill.pub/2016/deconv-checkerboard/
+                self.___conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                            nn.Unflatten(1, (32, 4, 4)),
+                                            nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            Interpolate((32, 32), mode='nearest'),
+                                            nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            Interpolate((64, 64), mode='nearest'),
+                                            nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
+                                            nn.Sigmoid()
+                                            )
+                #Residual version of decoder
+                self._____conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                            nn.Unflatten(1, (32, 4, 4)),
+                                            nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                            ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            Interpolate((32, 32), mode='nearest'),
+                                            nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                            ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                            nn.MaxPool2d(3, 1, 1, 1),
+                                            Interpolate((64, 64), mode='nearest'),
+                                            ResidualBlock(32, 32, kernel=3, stride=1, padding = 1),
+                                            nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
+                                            nn.Sigmoid()
+                                            )
+                ### Smooth output, still not learning
+                self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+                                            nn.Unflatten(1, (32, 8, 8)),
+                                            nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                            ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                            nn.MaxPool2d(2, 2),
+                                            Interpolate((20, 20), mode='bilinear'),
+                                            ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
+                                            nn.MaxPool2d(2, 2),
+                                            Interpolate((36, 36), mode='bilinear'),
+                                            nn.Conv2d(64, 32, 5, 1, 0), nn.BatchNorm2d(32),nn.ReLU(inplace=True),
+                                            ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
+                                            Interpolate((68, 68), mode='bilinear'),
+                                            nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
+                                            nn.Sigmoid()
+                                            )
 
     def forward(self, x):
         return self.conv_block(x)
@@ -222,14 +229,17 @@ class Encoder(nn.Module):
             return self. calc_mean(torch.cat((x, y), dim = 1), self.calc_logVar(torch.cat(x, y), dim = 1))
 
 class Decoder(nn.Module):
-    def __init__(self, shape, nhid = 16, ncond = 0):
+    def __init__(self, shape, nhid = 16, ncond = 0, elv=False):
         super(Decoder, self).__init__()
         c, w, h = shape
         self.shape = shape
         test_block = 'on'
-        if test_block == 'on':
+        if test_block == 'on' and elv == True:
             print('Decoder test block on')
-            self.decode = ConvBlock(shape, nhid, ncond, encoder=False)
+            self.decode = ConvBlock(shape, nhid, ncond, encoder=False, elv = True)
+        elif test_block == 'on' and elv == False:
+            print('Decoder test block on')
+            self.decode = ConvBlock(shape, nhid, ncond, encoder=False, elv = False)
         else:
             print('Decoder test block off')
             self.decode = nn.Sequential(MLP([nhid+ncond, nhid+64, nhid+128, nhid+256, c*w*h], last_activation = False), nn.Sigmoid())

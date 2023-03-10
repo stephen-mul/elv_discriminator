@@ -79,7 +79,7 @@ class VAE(nn.Module):
         if elv:
             # Double dimensions of target image
             d_shape = (shape[0], 2*shape[1], 2*shape[2])
-            self.decoder = Decoder(d_shape, nhid)
+            self.decoder = Decoder(d_shape, nhid, elv=True)
         else:
             self.decoder = Decoder(shape, nhid)
 

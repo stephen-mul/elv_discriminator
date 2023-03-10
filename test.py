@@ -52,7 +52,8 @@ def main(args):
         if DATASET == "custom":
             net = VAE((1, 32, 32), nhid=2048, elv=True).to(device)
         else:
-            net = VAE((1, 28, 28), nhid = 4).to(device)
+            #net = VAE((1, 28, 28), nhid = 4).to(device)
+            net = VAE((1, 28, 28), nhid = 2048).to(device)
         net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/new_model/VAE.pt')['net'])
     else:
         print('Invalid network mode. Must be either simple_VAE, simple_cVAE, or VAE')
@@ -66,10 +67,11 @@ def main(args):
                 if DATASET == 'custom':
                     imgs = normalise(data['image_0'].to(device))
                     im1 = normalise(data['image_1']).to(device)
+                    img = np.transpose(im1[0].cpu().numpy(), [1,2,0])
                 else:
                     imgs, _ = data
                     imgs = imgs.to(device)
-                img = np.transpose(im1[0].cpu().numpy(), [1,2,0])
+                    img = np.transpose(imgs[0].cpu().numpy(), [1,2,0])
                 plt.subplot(121)
                 plt.imshow(np.squeeze(img))
                 out, _, _ = net(imgs)

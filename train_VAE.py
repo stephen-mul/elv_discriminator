@@ -42,13 +42,17 @@ def main(args):
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if DATASET == 'MNIST':
-        net = VAE((1, 28, 28), nhid = 4)
+        #net = VAE((1, 28, 28), nhid = 4)
+        net = VAE((1, 28, 28), nhid=2048, elv=False)
     elif DATASET == 'custom':
         net = VAE((1, 32, 32), nhid = 2048, elv=True)
     net.to(device)
 
-    if summary_mode:
+    if summary_mode and DATASET == 'custom':
         summary(net, (1, 32, 32))
+        exit()
+    elif summary_mode and DATASET == 'MNIST':
+        summary(net, (1, 28,28))
         exit()
 
     save_name = './weights/new_model/VAE.pt'
@@ -113,14 +117,15 @@ def main(args):
 
             #print('epoch %d, train loss %.4f , time %.1f sec'
             #% (epoch, train_loss, time.time() - start))
-            print(f'epoch {epoch}, train loss {round(train_loss, 4)}, time {round(time.time() -start, 1)} sec, lr {lr}')
+            print(f'epoch {epoch}, train loss {round(train_loss, 4)}, time {round(time.time() -start, 1)} sec, lr {round(lr, 4)}')
         
-            if scheduler == 'simple_decay':
+            if scheduler_type == 'simple_decay':
                 adjust_lr(optimiser)
-            elif scheduler == 'cyclic':
+            elif scheduler_type == 'cyclic':
                 scheduler.step()
             else:
                 print('Select a valid lr scheduler - simple_decay or cyclic')
+                exit()
             
             if (early_stop(train_loss, net, optimiser)):
                 break
