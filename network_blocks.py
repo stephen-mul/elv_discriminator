@@ -106,8 +106,16 @@ class ConvBlock(nn.Module):
                                         Flatten(), MLP([ww*hh*32, 256])
                                         )
             
+            #No layer norm
             self.conv_block = nn.Sequential(nn.Conv2d(c, 16, 3, padding = 1, stride = 2), nn.BatchNorm2d(16), nn.ReLU(inplace = True),
                                         nn.Conv2d(16, 32, 3, padding = 1, stride = 2), nn.BatchNorm2d(32), nn.ReLU(inplace = True),
+                                        ResidualBlock(32, 32 , kernel=3, stride = 1, padding=1),
+                                        nn.MaxPool2d(2, 2),
+                                        Flatten(), MLP([ww*hh*32, 256])
+                                        )
+            ### Layer norm block
+            self._conv_block = nn.Sequential(nn.Conv2d(c, 16, 3, padding = 1, stride = 2), nn.LayerNorm([16, 16, 16]), nn.ReLU(inplace = True),
+                                        nn.Conv2d(16, 32, 3, padding = 1, stride = 2), nn.LayerNorm([32, 8, 8]), nn.ReLU(inplace = True),
                                         ResidualBlock(32, 32 , kernel=3, stride = 1, padding=1),
                                         nn.MaxPool2d(2, 2),
                                         Flatten(), MLP([ww*hh*32, 256])
