@@ -161,23 +161,23 @@ class ConvBlock(nn.Module):
                                             nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
                                             nn.Sigmoid()
                                             )
-                #Residual version of decoder
-                self._____conv_block = nn.Sequential(MLP([nhid+ncond]),
-                                            nn.Unflatten(1, (32, 4, 4)),
-                                            nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
-                                            ResidualBlock(64, 64, kernel=3, stride=1, padding=1),
-                                            nn.MaxPool2d(3, 1, 1, 1),
-                                            Interpolate((32, 32), mode='nearest'),
-                                            nn.Conv2d(64, 32, 3, 1, 1), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
-                                            ResidualBlock(32, 32, kernel=3, stride=1, padding=1),
-                                            nn.MaxPool2d(3, 1, 1, 1),
-                                            Interpolate((64, 64), mode='nearest'),
-                                            ResidualBlock(32, 32, kernel=3, stride=1, padding = 1),
-                                            nn.Conv2d(32, 1, 3, 1, 1), nn.BatchNorm2d(1),
+                #Removing unecessary layers
+                self._conv_block = nn.Sequential(MLP([nhid+ncond, 512]),
+                                            nn.Unflatten(1, (8, 8, 8)),
+                                            nn.Conv2d(8, 32, 5, 1, 0), nn.BatchNorm2d(32), nn.ReLU(inplace=True),
+                                            nn.MaxPool2d(2, 2),
+                                            Interpolate((20, 20), mode='bilinear'),
+                                            nn.Conv2d(32, 64, 5, 1, 0), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
+                                            nn.MaxPool2d(2, 2),
+                                            Interpolate((36, 36), mode='bilinear'),
+                                            nn.Conv2d(64, 32, 5, 1, 0), nn.BatchNorm2d(32),nn.ReLU(inplace=True),
+                                            Interpolate((68, 68), mode='bilinear'),
+                                            nn.Conv2d(32, 1, 5, 1, 0), nn.BatchNorm2d(1),
                                             nn.Sigmoid()
                                             )
+
                 ### Smooth output, still not learning
-                self.conv_block = nn.Sequential(MLP([nhid+ncond]),
+                self.conv_block = nn.Sequential(MLP([nhid+ncond, 1024, 2048]),
                                             nn.Unflatten(1, (32, 8, 8)),
                                             nn.Conv2d(32, 64, 3, 1, 1), nn.BatchNorm2d(64), nn.ReLU(inplace=True),
                                             ResidualBlock(64, 64, kernel=3, stride=1, padding=1),

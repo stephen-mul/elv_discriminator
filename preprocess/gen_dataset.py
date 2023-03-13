@@ -46,7 +46,7 @@ def main(args):
 
     for i_batch, sample_batched in enumerate(dataloader):
         print(f'Batch number {i_batch}')
-        print(f'Batch shape {len(sample_batched)}')
+        #print(f'Batch shape {len(sample_batched)}')
         #save_levels(sample_batched)
 
 

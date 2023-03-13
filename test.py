@@ -35,7 +35,7 @@ def main(args):
     elif DATASET == 'custom':
         ### test loader here
         #processed_path = './data/test'
-        processed_path = './data/random_tile_0'
+        processed_path = './data/random_tile_200'
         test_loader = torch.utils.data.DataLoader(
             customDataset(processed_path), batch_size = 1
         )
@@ -50,7 +50,7 @@ def main(args):
         net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/simple_cVAE/cvae.pth'))
     elif MODE == "VAE":
         if DATASET == "custom":
-            net = VAE((1, 32, 32), nhid=2048, elv=True).to(device)
+            net = VAE((1, 32, 32), nhid=16, elv=True).to(device)
         else:
             #net = VAE((1, 28, 28), nhid = 4).to(device)
             net = VAE((1, 28, 28), nhid = 2048).to(device)

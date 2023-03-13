@@ -32,7 +32,7 @@ def main(args):
         train_iter = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=torch.get_num_threads())
     elif DATASET == 'custom':
         #processed_path = './data/test'
-        processed_path = './data/random_tile_0'
+        processed_path = './data/random_tile_200'
         train_iter = DataLoader(customDataset(processed_path, transform=RotateTransform([0, 90, 180, 270])), batch_size = 32,
                                     shuffle = True, num_workers=torch.get_num_threads())
 
@@ -45,7 +45,7 @@ def main(args):
         #net = VAE((1, 28, 28), nhid = 4)
         net = VAE((1, 28, 28), nhid=2048, elv=False)
     elif DATASET == 'custom':
-        net = VAE((1, 32, 32), nhid = 2048, elv=True)
+        net = VAE((1, 32, 32), nhid = 16, elv=True)
     net.to(device)
 
     if summary_mode and DATASET == 'custom':
