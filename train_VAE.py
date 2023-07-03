@@ -3,7 +3,7 @@ import numpy as np
 import torch.nn.functional as F
 import torchvision
 import os, time, tqdm
-import argparse
+import config
 from conv_vae import VAE
 from losses import new_vae_loss
 from network_utils import EarlyStop, binary, normalise
@@ -12,10 +12,10 @@ from custom_dataloader.custom_elv import customDataset
 from custom_dataloader.augmentations import RotateTransform
 from torchsummary import summary
 
-def main(args):
-    DATASET = args.dataset
-    summary_mode = args.summary
-    scheduler_type = args.lr_scheduler
+def main():
+    DATASET = config.dataset
+    summary_mode = config.summary
+    scheduler_type = config.lr_scheduler
 
     #################
     ### Load Data ###
@@ -95,7 +95,7 @@ def main(args):
     early_stop = EarlyStop(patience = 20, save_name = save_name)
     net = net.to(device)
     
-    max_epochs = args.nepochs
+    max_epochs = config.nepochs
     print('Training on ', device)
     for epoch in range(max_epochs):
         train_loss, n , start = 0.0, 0, time.time()
@@ -171,10 +171,4 @@ def main(args):
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--dataset', default='MNIST')
-    parser.add_argument('--nepochs', type = int, default = 100)
-    parser.add_argument('--summary', action=argparse.BooleanOptionalAction, default=False)
-    parser.add_argument('--lr_scheduler', type = str, default='simple_decay')
-    args = parser.parse_args()
-    main(args)
+    main()
