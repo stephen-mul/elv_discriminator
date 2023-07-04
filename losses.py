@@ -17,6 +17,10 @@ def bin_cross_entropy(out, imgs):
 def vae_loss(out, imgs, mu, logVar):
     return bin_cross_entropy(out, imgs) + kl_div(mu, logVar)
 
+def cross_entropy(y_hat, y):
+    ce_loss = nn.CrossEntropyLoss()
+    return ce_loss(y_hat, y)
+
 ### loss for updated VAEs
 
 

@@ -3,7 +3,7 @@
 dataset = 'MNIST'
 # dataset = 'custom'
 
-nepochs = 100
+nepochs = 20
 
 summary = False
 

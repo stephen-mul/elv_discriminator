@@ -5,7 +5,9 @@ import torchvision
 import os, time, tqdm
 import config
 from conv_vae import VAE
-from losses import new_vae_loss
+from discriminator import discriminator
+from one_hot_encoder import ohe
+from losses import new_vae_loss, cross_entropy
 from network_utils import EarlyStop, binary, normalise
 from torch.utils.data import DataLoader
 from custom_dataloader.custom_elv import customDataset
@@ -29,7 +31,7 @@ def main():
         ])
 
         train_data = torchvision.datasets.MNIST(root='data', train=True, download=True, transform=mnist_transform)
-        train_iter = DataLoader(train_data, batch_size=512, shuffle=True, num_workers=torch.get_num_threads())
+        train_iter = DataLoader(train_data, batch_size=32, shuffle=True, num_workers=torch.get_num_threads())
     elif DATASET == 'custom':
         #processed_path = './data/test'
         processed_path = './data/random_tile_200'
@@ -42,8 +44,8 @@ def main():
     device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
 
     if DATASET == 'MNIST':
-        #net = VAE((1, 28, 28), nhid = 4)
-        net = VAE((1, 28, 28), nhid=2048, elv=False)
+        net = discriminator()
+        encoder = ohe()
     elif DATASET == 'custom':
         net = VAE((1, 32, 32), nhid = 16, elv=True)
     net.to(device)
@@ -100,11 +102,12 @@ def main():
     for epoch in range(max_epochs):
         train_loss, n , start = 0.0, 0, time.time()
         if DATASET == 'MNIST':
-            for X, _ in tqdm.tqdm(train_iter, ncols = 50):
+            for X, y in tqdm.tqdm(train_iter, ncols = 50):
                 X = X.to(device)
-                X_hat, mean, logvar = net(X)
+                y = encoder.encode(y).to(device)
+                y_hat = net(X)
 
-                l = new_vae_loss(X, X_hat, mean, logvar).to(device)
+                l = cross_entropy(y_hat, y).to(device)
                 optimiser.zero_grad()
                 l.backward()
                 optimiser.step()
