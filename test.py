@@ -55,7 +55,7 @@ def main():
         else:
             #net = VAE((1, 28, 28), nhid = 4).to(device)
             net = VAE((1, 28, 28), nhid = 2048).to(device)
-        net.load_state_dict(torch.load('/home/stephen/notgan_workdir/elv_vae/weights/new_model/VAE.pt')['net'])
+        net.load_state_dict(torch.load('./weights/new_model/VAE.pt')['net'])
     else:
         print('Invalid network mode. Must be either simple_VAE, simple_cVAE, or VAE')
     
