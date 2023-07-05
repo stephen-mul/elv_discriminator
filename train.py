@@ -56,8 +56,12 @@ def main():
     elif summary_mode and DATASET == 'MNIST':
         summary(net, (1, 28,28))
         exit()
-
-    save_name = './weights/new_model/VAE.pt'
+        
+    weight_dir = './weights/new_model/'
+    if not os.path.exists(weight_dir):
+        os.makedirs(weight_dir)
+        print(f'Created new folder: {weight_dir}')
+    save_name = f'{weight_dir}VAE.pt'
 
 
     ################
