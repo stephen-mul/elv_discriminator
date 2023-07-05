@@ -9,3 +9,6 @@ summary = False
 
 lr_scheduler = 'simple_decay'
 #lr_scheduler = 'cyclic'
+
+### For testing
+mode = 'VAE'
