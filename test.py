@@ -77,7 +77,7 @@ def main():
                 else:
                     imgs, y = data
                     imgs = imgs.to(device)
-                    y = encoder.encode(y).to(device)
+                    y_encoded = encoder.encode(y).to(device)
                     img = np.transpose(imgs[0].cpu().numpy(), [1,2,0])
                 #plt.subplot(121)
                 #plt.imshow(np.squeeze(img))
@@ -89,7 +89,7 @@ def main():
                     os.makedirs('./plots/')
                     print('Created new /plots directory.')
                 #plt.savefig(f'./plots/test_plot_{test_count}.png')
-                print(f'Test count \n {y - y_hat}')
+                print(f'Prediceted {y}  \n {y_encoded - y_hat}')
                 test_count += 1
                 if test_count == 10:
                     break
