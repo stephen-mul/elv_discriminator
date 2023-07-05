@@ -8,6 +8,8 @@ import random
 import config
 import os
 
+from discriminator import discriminator
+from one_hot_encoder import ohe
 from conv_vae import simple_VAE, VAE
 from cond_vae import simple_cVAE
 from custom_dataloader.custom_elv import customDataset
@@ -54,7 +56,7 @@ def main():
             net = VAE((1, 32, 32), nhid=16, elv=True).to(device)
         else:
             #net = VAE((1, 28, 28), nhid = 4).to(device)
-            net = VAE((1, 28, 28), nhid = 2048).to(device)
+            net = discriminator().to(device)
         net.load_state_dict(torch.load('./weights/new_model/VAE.pt')['net'])
     else:
         print('Invalid network mode. Must be either simple_VAE, simple_cVAE, or VAE')
@@ -70,19 +72,21 @@ def main():
                     im1 = normalise(data['image_1']).to(device)
                     img = np.transpose(im1[0].cpu().numpy(), [1,2,0])
                 else:
-                    imgs, _ = data
+                    imgs, y = data
                     imgs = imgs.to(device)
+                    y = ohe(y).to(device)
                     img = np.transpose(imgs[0].cpu().numpy(), [1,2,0])
-                plt.subplot(121)
-                plt.imshow(np.squeeze(img))
-                out, _, _ = net(imgs)
-                outimg = np.transpose(out[0].cpu().numpy(), [1,2,0])
-                plt.subplot(122)
-                plt.imshow(np.squeeze(outimg))
+                #plt.subplot(121)
+                #plt.imshow(np.squeeze(img))
+                y_hat = net(imgs)
+                #outimg = np.transpose(out[0].cpu().numpy(), [1,2,0])
+                #plt.subplot(122)
+                #plt.imshow(np.squeeze(outimg))
                 if not os.path.exists('./plots/'):
                     os.makedirs('./plots/')
                     print('Created new /plots directory.')
-                plt.savefig(f'./plots/test_plot_{test_count}.png')
+                #plt.savefig(f'./plots/test_plot_{test_count}.png')
+                print(f'Test count \n {y - y_hat}')
                 test_count += 1
                 if test_count == 10:
                     break
