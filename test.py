@@ -44,6 +44,9 @@ def main():
         )
         pass
 
+    ### Get encoder ###
+    encoder = ohe()
+
     print('Loading Model')
     if MODE == 'simple_VAE':
         net = simple_VAE().to(device)
@@ -74,7 +77,7 @@ def main():
                 else:
                     imgs, y = data
                     imgs = imgs.to(device)
-                    y = ohe(y).to(device)
+                    y = encoder.encode(y).to(device)
                     img = np.transpose(imgs[0].cpu().numpy(), [1,2,0])
                 #plt.subplot(121)
                 #plt.imshow(np.squeeze(img))
