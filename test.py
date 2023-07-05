@@ -89,7 +89,11 @@ def main():
                     os.makedirs('./plots/')
                     print('Created new /plots directory.')
                 #plt.savefig(f'./plots/test_plot_{test_count}.png')
-                print(f'Prediceted {y}  \n {y_encoded - y_hat}')
+                print(f'Test: {test_count} \n \
+                      Predicted: {y}  \n \
+                      Encoded: {y_encoded} \n \
+                      Output: {y_hat} \n \
+                      Difference: {y_encoded - y_hat}')
                 test_count += 1
                 if test_count == 10:
                     break
