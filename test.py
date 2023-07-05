@@ -13,7 +13,7 @@ from cond_vae import simple_cVAE
 from custom_dataloader.custom_elv import customDataset
 from network_utils import normalise
 
-def main(args):
+def main():
 
     MODE = config.mode
     DATASET = config.dataset
