@@ -5,7 +5,8 @@ from torchvision import datasets, transforms
 import matplotlib.pyplot as plt
 import numpy as np
 import random
-import argparse
+import config
+import os
 
 from conv_vae import simple_VAE, VAE
 from cond_vae import simple_cVAE
@@ -14,8 +15,8 @@ from network_utils import normalise
 
 def main(args):
 
-    MODE = args.mode
-    DATASET = args.dataset
+    MODE = config.mode
+    DATASET = config.dataset
 
     ########################
     ### GPU Availability ###
@@ -78,7 +79,10 @@ def main(args):
                 outimg = np.transpose(out[0].cpu().numpy(), [1,2,0])
                 plt.subplot(122)
                 plt.imshow(np.squeeze(outimg))
-                plt.savefig(f'/home/stephen/notgan_workdir/elv_vae/plots/test_plot_{test_count}.png')
+                if not os.path.exists('./plots/'):
+                    os.makedirs('./plots/')
+                    print('Created new /plots directory.')
+                plt.savefig(f'./plots/test_plot_{test_count}.png')
                 test_count += 1
                 if test_count == 10:
                     break
@@ -102,8 +106,4 @@ def main(args):
                     break
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser()
-    parser.add_argument('--mode', required=True, default='simple_VAE')
-    parser.add_argument('--dataset', default='MNIST')
-    args = parser.parse_args()
-    main(args)
+    main()
